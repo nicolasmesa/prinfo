@@ -3,9 +3,9 @@ LD := arm-none-linux-gnueabi-gcc
 CFLAGS := -g -Wall -Werror -static
 LDFLAGS := -static
 
-OBJECTS := binder_info.o
+OBJECTS := prinfo.o
 
-all: binder_info
+all: prinfo
 
 
 : $(OBJECTS)
@@ -15,7 +15,7 @@ all: binder_info
 	$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm -f binder_info
-	rm -f binder_info.o
+	rm -f prinfo
+	rm -f prinfo.o
 
 .PHONY: clean
