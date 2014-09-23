@@ -1,4 +1,5 @@
 #include<linux/unistd.h>
+#include<linux/sched.h>
 #include<linux/linkage.h>
 #include<linux/kernel.h>
 #include<linux/prinfo.h>
@@ -6,11 +7,33 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
+void do_dfs(struct list_head *head, struct prinfo *buf, int max_num, int *curr_num){
+	struct task_struct *child;
+
+	list_for_each_entry(child, head, sibling) {
+                //printk(KERN_WARNING "Init child:%p -  %d\n", child, child->pid);
+
+		if((*curr_num) < max_num) {
+		//	printk(KERN_WARNING "Yes %d/%d\n", *curr_num, max_num);
+			if (child->parent != NULL)
+                                (buf + (*curr_num))->parent_pid = child->parent->pid;
+                        else
+                                (buf + (*curr_num))->parent_pid = 0;
+
+                        (buf +*(curr_num))->pid = child->pid;
+
+		}
+
+		(*curr_num)++;
+		do_dfs(&child->children, buf, max_num, curr_num);
+        }
+}
+
 SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 {
-        int k_int, num = 0;
+        int k_int, num = 0, i;
         struct prinfo *k_buf;
-        struct task_struct *task, *parent;
+	struct list_head *task_list;
 
         if (buf == NULL || nr == NULL) {
                 printk(KERN_WARNING "Either buf or nr are NULL\n");
@@ -31,25 +54,16 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 
         read_lock(&tasklist_lock);
 
-        for_each_process(task) {
-                if (num < k_int) {
-                        parent = task->parent;
+	task_list = &(init_task.children);
 
-                        if (parent != NULL)
-                                (buf + num)->parent_pid = parent->pid;
-                        else
-                                (buf + num)->parent_pid = 0;
+	do_dfs(task_list, k_buf, k_int, &num);
 
-                        (buf + num)->pid = task->pid;
-                }
+	read_unlock(&tasklist_lock);
 
-                num++;
-        }
+	//for (i=0; i < k_int; i++)
+	//	printk(KERN_WARNING "PIDD: %d\n", k_buf[i].pid);
 
-        read_unlock(&tasklist_lock);
-
-
-        if (copy_to_user(buf, k_buf, k_int)) {
+        if (copy_to_user(buf, k_buf, k_int * sizeof(* k_buf))) {
                 printk(KERN_WARNING "Error while copying buf\n");
                 return -EFAULT;
         }

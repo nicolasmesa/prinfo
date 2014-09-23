@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
 	for (i = 0; i < ret; i++) {
 		temp = buf[i];
-		printf("Parent task id: %d\tTask id %d\n", temp.parent_pid, temp.pid);
+		printf("Parent task id: %d\tTask id %d\n", buf[i].parent_pid, buf[i].pid);
 	}	
 
 	return 0;
