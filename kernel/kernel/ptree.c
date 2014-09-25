@@ -9,7 +9,8 @@
 
 void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task) {
 	prinfo_struct->pid = task->pid;
-	printk(KERN_WARNING "Init child:%p -  %d\n", task, task->pid);
+	prinfo_struct->parent_pid = task->parent->pid;
+	printk(KERN_WARNING "Init child:%p--%d-- %d\n", task,task->parent->pid, task->pid);
 }
 
 struct task_struct * get_first_child(struct task_struct *task)
@@ -22,17 +23,18 @@ struct task_struct * get_first_child(struct task_struct *task)
 	return NULL;
 }
 
-void do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int *curr_num){
+int do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int curr_num){
 	struct task_struct *child, *temp;
 	struct list_head list1, list2;
 	int found;
 
 	child = root;
 
-	while (1) {
+	while (curr_num < max_num) {
 		add_prinfo(buf, child);
 		buf++;
-
+		curr_num++;
+			
 		if (get_first_child(child)){
 			printk(KERN_WARNING "Different than child\n");
 			child = get_first_child(child);
@@ -49,7 +51,7 @@ void do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int *curr
 				}
 
 				if (child == root)
-					return;
+					return curr_num;
 
 				if (!found)
 					child = child->parent;
@@ -58,7 +60,7 @@ void do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int *curr
 			child = temp;	
 		}
 	}	
-
+	return curr_num;
 }
 
 
@@ -67,7 +69,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
         int k_int, num = 0, i;
         struct prinfo *k_buf;
 	struct list_head *task_list;
-
+	int ret_val = 0;
         if (buf == NULL || nr == NULL) {
                 printk(KERN_WARNING "Either buf or nr are NULL\n");
                 return -EINVAL;
@@ -89,7 +91,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 
 	task_list = &(init_task.children);
 
-	do_dfs(&init_task, k_buf, k_int, &num);
+	ret_val = do_dfs(&init_task, k_buf, k_int, num);
 
 	read_unlock(&tasklist_lock);
 
@@ -101,6 +103,6 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
                 return -EFAULT;
         }
 
-
-        return num;
+	printk(KERN_WARNING "Returning %d\n", ret_val);
+        return ret_val;
 }

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 
-#define NR 50
+#define NR 30 
 
 struct prinfo {
         pid_t parent_pid;               /* process id of parent */
