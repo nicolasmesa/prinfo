@@ -19,6 +19,45 @@ int ptree(struct prinfo* buf, int* nr)
 	return syscall(223, buf, nr);
 }
 
+void print_tabs(int count)
+{
+	while(count--)
+		printf("\t");
+}
+
+void print_tree(struct prinfo *buff, int nr)
+{
+	int i, curr_level = 0, levels[100];
+	int curr_parent, prev_parent, prev_child;
+
+	levels[0] = buff[0].pid;
+	prev_parent = -1;
+	prev_child = 0;
+
+	printf("Parent task id: %d\tTask id %d\t Command: %s\n", buff[0].parent_pid, buff[0].pid, buff[0].comm);
+
+	for (i = 1; i < nr; i++) {
+		curr_parent = buff[i].parent_pid;
+
+		if (curr_parent == prev_child) {
+			curr_level++;
+			levels[curr_level] = buff[i].pid;
+			
+		}else if (curr_parent != prev_parent) {
+			while (levels[curr_level] != curr_parent)
+				curr_level--;
+
+			curr_level++;
+			levels[curr_level] = buff[i].pid;
+		}
+
+		prev_child = buff[i].pid;
+		prev_parent = curr_parent;
+
+		print_tabs(curr_level);
+		printf("Parent task id: %d\tTask id %d\t Command: %s\n", buff[i].parent_pid, buff[i].pid, buff[i].comm);
+	}
+}
 
 int main(int argc, char **argv) {
 	struct prinfo buf[NR], temp;
@@ -33,6 +72,8 @@ int main(int argc, char **argv) {
 		temp = buf[i];
 		printf("Parent task id: %d\tTask id %d\t Command: %s\n", buf[i].parent_pid, buf[i].pid, buf[i].comm);
 	}	
+
+	print_tree(buf, ret);
 
 	return 0;
 }
