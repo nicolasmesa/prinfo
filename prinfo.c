@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 
-#define NR 30 
+#define NR 100 
 
 struct prinfo {
         pid_t parent_pid;               /* process id of parent */
@@ -14,18 +14,24 @@ struct prinfo {
         char comm[64];                  /* name of program executed */
 };
 
+int ptree(struct prinfo* buf, int* nr)
+{
+	return syscall(223, buf, nr);
+}
+
+
 int main(int argc, char **argv) {
 	struct prinfo buf[NR], temp;
 	int nr = NR, ret, i;
 
-	ret = syscall(223, buf, &nr);	
+	ret = ptree( buf, &nr);	
 	printf("Returned: %d\n", ret);
 
 	ret = ret < nr ? ret : nr;
 
 	for (i = 0; i < ret; i++) {
 		temp = buf[i];
-		printf("Parent task id: %d\tTask id %d\n", buf[i].parent_pid, buf[i].pid);
+		printf("Parent task id: %d\tTask id %d\t Command: %s\n", buf[i].parent_pid, buf[i].pid, buf[i].comm);
 	}	
 
 	return 0;

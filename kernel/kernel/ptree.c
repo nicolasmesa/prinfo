@@ -8,8 +8,50 @@
 #include <linux/slab.h>
 
 void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task) {
+	
+	struct task_struct* child;
+	struct task_struct* sibling;
+
+	if(list_empty(&task->children))
+	{
+		child = NULL;
+	}
+	else
+	{
+		child = list_first_entry(&task->children, struct task_struct, sibling);
+		
+	}
+
+	if(list_empty(&task->sibling))
+	{
+		sibling = NULL;
+	}
+	else
+	{
+		sibling = list_first_entry(&task->sibling, struct task_struct, sibling);
+	}
+	
 	prinfo_struct->pid = task->pid;
 	prinfo_struct->parent_pid = task->parent->pid;
+	
+	if(child)
+	prinfo_struct->first_child_pid =child->pid ;
+	else
+	prinfo_struct->first_child_pid = 0;
+
+	if(sibling)
+	prinfo_struct->next_sibling_pid = sibling->pid;
+	else
+	prinfo_struct->next_sibling_pid = 0;
+	
+	prinfo_struct->state = task->state;
+	
+	prinfo_struct->uid = task->cred->uid;
+
+	get_task_comm(prinfo_struct->comm, task);
+	
+
+
 	printk(KERN_WARNING "Init child:%p--%d-- %d\n", task,task->parent->pid, task->pid);
 }
 
@@ -27,18 +69,22 @@ int do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int curr_n
 	struct task_struct *child, *temp;
 	struct list_head list1, list2;
 	int found;
-
+	int actual_num = 0;
 	child = root;
 
-	while (curr_num < max_num) {
+	while (1) {
+		
+		if(curr_num < max_num)
+		{
 		add_prinfo(buf, child);
 		buf++;
 		curr_num++;
-			
+		}	
 		if (get_first_child(child)){
 			printk(KERN_WARNING "Different than child\n");
 			child = get_first_child(child);
-		} else {
+		} 
+		else {
 			printk(KERN_WARNING "Noooot\n");
 			found = 0;
 			while (!found) {
@@ -51,7 +97,7 @@ int do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int curr_n
 				}
 
 				if (child == root)
-					return curr_num;
+					return actual_num;
 
 				if (!found)
 					child = child->parent;
@@ -59,16 +105,17 @@ int do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int curr_n
 
 			child = temp;	
 		}
+	actual_num++;
 	}	
-	return curr_num;
+	return actual_num;
 }
-
 
 SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 {
         int k_int, num = 0, i;
         struct prinfo *k_buf;
 	struct list_head *task_list;
+	struct task_struct* parent_of_init_task;
 	int ret_val = 0;
         if (buf == NULL || nr == NULL) {
                 printk(KERN_WARNING "Either buf or nr are NULL\n");
@@ -90,7 +137,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
         read_lock(&tasklist_lock);
 
 	task_list = &(init_task.children);
-
+	parent_of_init_task = &(init_task.parent);
 	ret_val = do_dfs(&init_task, k_buf, k_int, num);
 
 	read_unlock(&tasklist_lock);
