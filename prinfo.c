@@ -34,7 +34,8 @@ void print_tree(struct prinfo *buff, int nr)
 	prev_parent = -1;
 	prev_child = 0;
 
-	printf("Parent task id: %d\tTask id %d\t Command: %s\n", buff[0].parent_pid, buff[0].pid, buff[0].comm);
+	printf("%s,%d,%ld,%d,%d,%d,%d\n", buff[0].comm, buff[0].pid, buff[0].state,
+                                buff[0].parent_pid, buff[0].first_child_pid, buff[0].next_sibling_pid, buff[0].uid);
 
 	for (i = 1; i < nr; i++) {
 		curr_parent = buff[i].parent_pid;
@@ -55,7 +56,8 @@ void print_tree(struct prinfo *buff, int nr)
 		prev_parent = curr_parent;
 
 		print_tabs(curr_level);
-		printf("Parent task id: %d\tTask id %d\t Command: %s\n", buff[i].parent_pid, buff[i].pid, buff[i].comm);
+		printf("%s,%d,%ld,%d,%d,%d,%d\n", buff[i].comm, buff[i].pid, buff[0].state,
+				buff[i].parent_pid, buff[i].first_child_pid, buff[i].next_sibling_pid, buff[i].uid);
 	}
 }
 
@@ -67,11 +69,6 @@ int main(int argc, char **argv) {
 	printf("Returned: %d\n", ret);
 
 	ret = ret < nr ? ret : nr;
-
-	for (i = 0; i < ret; i++) {
-		temp = buf[i];
-		printf("Parent task id: %d\tTask id %d\t Command: %s\n", buf[i].parent_pid, buf[i].pid, buf[i].comm);
-	}	
 
 	print_tree(buf, ret);
 
