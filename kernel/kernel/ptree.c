@@ -7,27 +7,60 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
-void do_dfs(struct list_head *head, struct prinfo *buf, int max_num, int *curr_num){
-	struct task_struct *child;
-
-	list_for_each_entry(child, head, sibling) {
-                //printk(KERN_WARNING "Init child:%p -  %d\n", child, child->pid);
-
-		if((*curr_num) < max_num) {
-		//	printk(KERN_WARNING "Yes %d/%d\n", *curr_num, max_num);
-			if (child->parent != NULL)
-                                (buf + (*curr_num))->parent_pid = child->parent->pid;
-                        else
-                                (buf + (*curr_num))->parent_pid = 0;
-
-                        (buf +*(curr_num))->pid = child->pid;
-
-		}
-
-		(*curr_num)++;
-		do_dfs(&child->children, buf, max_num, curr_num);
-        }
+void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task) {
+	prinfo_struct->pid = task->pid;
+	printk(KERN_WARNING "Init child:%p -  %d\n", task, task->pid);
 }
+
+struct task_struct * get_first_child(struct task_struct *task)
+{
+	struct task_struct *temp;
+	list_for_each_entry(temp, &task->children, sibling){
+		return temp;
+	}
+
+	return NULL;
+}
+
+void do_dfs(struct task_struct *root, struct prinfo *buf, int max_num, int *curr_num){
+	struct task_struct *child, *temp;
+	struct list_head list1, list2;
+	int found;
+
+	child = root;
+
+	while (1) {
+		add_prinfo(buf, child);
+		buf++;
+
+		if (get_first_child(child)){
+			printk(KERN_WARNING "Different than child\n");
+			child = get_first_child(child);
+		} else {
+			printk(KERN_WARNING "Noooot\n");
+			found = 0;
+			while (!found) {
+				list_for_each_entry(temp, &child->sibling, sibling){
+					if (temp == list_entry(&(child->parent->children), struct task_struct, sibling))
+						break;
+
+					found = 1;
+					break;
+				}
+
+				if (child == root)
+					return;
+
+				if (!found)
+					child = child->parent;
+			}
+
+			child = temp;	
+		}
+	}	
+
+}
+
 
 SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 {
@@ -56,7 +89,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 
 	task_list = &(init_task.children);
 
-	do_dfs(task_list, k_buf, k_int, &num);
+	do_dfs(&init_task, k_buf, k_int, &num);
 
 	read_unlock(&tasklist_lock);
 
