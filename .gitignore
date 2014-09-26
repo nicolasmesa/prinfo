@@ -1,3 +1,4 @@
 *.o
 binder_info
 stress
+prinfo
