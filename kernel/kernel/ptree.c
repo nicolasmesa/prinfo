@@ -57,11 +57,10 @@ struct task_struct *get_first_child(struct task_struct *task)
 }
 
 int do_dfs(struct task_struct *root,
-	struct prinfo *buf, int max_num, int curr_num)
+	struct prinfo *buf, int max_num)
 {
 
 	struct task_struct *child, *temp;
-	struct list_head list1, list2;
 	int found;
 	int actual_num = 0;
 
@@ -69,10 +68,9 @@ int do_dfs(struct task_struct *root,
 
 	while (1) {
 
-		if (curr_num < max_num) {
+		if (actual_num < max_num) {
 			add_prinfo(buf, child);
 			buf++;
-			curr_num++;
 		}
 
 		if (get_first_child(child))
@@ -105,9 +103,9 @@ int do_dfs(struct task_struct *root,
 	return actual_num;
 }
 
-SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
+SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 {
-	int k_int, num = 0, i;
+	int k_int, copy_size;
 	struct prinfo *k_buf;
 	struct list_head *task_list;
 	struct task_struct *parent_of_init_task;
@@ -133,15 +131,19 @@ SYSCALL_DEFINE2(ptree, struct prinfo *, buf, int *, nr)
 	read_lock(&tasklist_lock);
 
 	task_list = &(init_task.children);
-	parent_of_init_task = &(init_task.parent);
-	ret_val = do_dfs(&init_task, k_buf, k_int, num);
+	parent_of_init_task = init_task.parent;
+	ret_val = do_dfs(&init_task, k_buf, k_int);
 
 	read_unlock(&tasklist_lock);
 
-	if (copy_to_user(buf, k_buf, k_int * sizeof(*k_buf))) {
+	copy_size = ret_val < k_int ? ret_val : k_int;
+
+	if (copy_to_user(buf, k_buf, copy_size * sizeof(*k_buf))) {
 		printk(KERN_WARNING "Error while copying buf\n");
 		return -EFAULT;
 	}
+
+	kfree(k_buf);
 
 	return ret_val;
 }
