@@ -7,6 +7,11 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
+/*add_prinfo is used to gather the information needed to populate
+the prinfo structures. even here we ensure that threads are not
+added as children or siblings by doing the thread group leader
+check*/
+
 void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 {
 	struct task_struct *child;
@@ -28,12 +33,12 @@ void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 	prinfo_struct->pid = task->pid;
 	prinfo_struct->parent_pid = task->parent->pid;
 
-	if (child)
+	if (child && thread_group_leader(child))
 		prinfo_struct->first_child_pid = child->pid;
 	else
 		prinfo_struct->first_child_pid = 0;
 
-	if (sibling)
+	if (sibling && thread_group_leader(sibling))
 		prinfo_struct->next_sibling_pid = sibling->pid;
 	else
 		prinfo_struct->next_sibling_pid = 0;
@@ -45,6 +50,8 @@ void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 	get_task_comm(prinfo_struct->comm, task);
 }
 
+/*Self explanatory function. Wrote it as a wrapper*/
+
 struct task_struct *get_first_child(struct task_struct *task)
 {
 	struct task_struct *temp;
@@ -55,6 +62,14 @@ struct task_struct *get_first_child(struct task_struct *task)
 
 	return NULL;
 }
+
+/*do_dfs stores the process information in the dfs order. It 
+checks to ensure that threads are not being added to the tree
+by adding only thread group leaders. Algorithm is an iterative
+version of the depth first search algorithm. We keep track of
+the children of the process by using the found flag and otherwise
+iterate through the sibling list*/
+
 
 int do_dfs(struct task_struct *root,
 	struct prinfo *buf, int max_num)
@@ -69,10 +84,15 @@ int do_dfs(struct task_struct *root,
 	while (1) {
 
 		if (actual_num < max_num) {
+			
+			if(thread_group_leader(child)) {
 			add_prinfo(buf, child);
 			buf++;
 		}
-
+		else
+			actual_num--;
+		
+		}
 		if (get_first_child(child))
 			child = get_first_child(child);
 		else {
@@ -103,12 +123,21 @@ int do_dfs(struct task_struct *root,
 	return actual_num;
 }
 
+/*The main system call. Wrapper for this is ptree() written in the
+test program. After initial error checking, alloc kernel memory and
+then populate it using the function add_prinfo above. No allocation 
+or user spae copy is done when the locks are held. do_dfs returns
+the actual number of processes running but copies information only
+for that number requested. The return value is passed back up to user
+space.*/
+
+
 SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 {
 	int k_int, copy_size;
 	struct prinfo *k_buf;
 	struct list_head *task_list;
-	struct task_struct *parent_of_init_task;
+	
 	int ret_val = 0;
 
 	if (buf == NULL || nr == NULL) {
@@ -131,7 +160,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 	read_lock(&tasklist_lock);
 
 	task_list = &(init_task.children);
-	parent_of_init_task = init_task.parent;
+	
 	ret_val = do_dfs(&init_task, k_buf, k_int);
 
 	read_unlock(&tasklist_lock);

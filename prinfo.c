@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/syscall.h>
-
+#include <stdlib.h>
 #define NR 3000
 
 struct prinfo {
@@ -27,14 +27,14 @@ void print_tabs(int count)
 
 void print_tree(struct prinfo *buff, int nr)
 {
-	int i, curr_level = 0, levels[100];
+	int i, curr_level = 0, levels[nr];
 	int curr_parent, prev_parent, prev_child;
 
 	levels[0] = buff[0].pid;
 	prev_parent = -1;
 	prev_child = 0;
 
-	printf("%s,%d,%ld,%d,%d,%d,%d\n", buff[0].comm, buff[0].pid, buff[0].state,
+	printf("%s,%d,%ld,%d,%d,%d,%lu\n", buff[0].comm, buff[0].pid, buff[0].state,
                                 buff[0].parent_pid, buff[0].first_child_pid, buff[0].next_sibling_pid, buff[0].uid);
 
 	for (i = 1; i < nr; i++) {
@@ -56,14 +56,23 @@ void print_tree(struct prinfo *buff, int nr)
 		prev_parent = curr_parent;
 
 		print_tabs(curr_level);
-		printf("%s,%d,%ld,%d,%d,%d,%d\n", buff[i].comm, buff[i].pid, buff[0].state,
+		printf("%s,%d,%ld,%d,%d,%d,%lu\n", buff[i].comm, buff[i].pid, buff[0].state,
 				buff[i].parent_pid, buff[i].first_child_pid, buff[i].next_sibling_pid, buff[i].uid);
 	}
 }
 
 int main(int argc, char **argv) {
-	struct prinfo buf[NR], temp;
-	int nr = NR, ret, i;
+	
+	if(argc != 2) {
+	
+	printf("Usage: ./prinfo <num of processes requested>\n");
+	return 0;	
+	
+	}	
+	
+	int nr = atoi(argv[1]);
+	struct prinfo buf[nr], temp;
+	int ret, i;
 
 	ret = ptree( buf, &nr);	
 	printf("Returned: %d\n", ret);
