@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
 	}	
 	
 	int nr = atoi(argv[1]);
-	struct prinfo buf[nr], temp;
-	int ret, i;
+	struct prinfo buf[nr];
+	int ret;
 
 	ret = ptree( buf, &nr);	
 	printf("Returned: %d\n", ret);

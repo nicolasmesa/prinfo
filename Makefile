@@ -3,9 +3,9 @@ LD := arm-none-linux-gnueabi-gcc
 CFLAGS := -g -Wall -Werror -static
 LDFLAGS := -static
 
-OBJECTS := prinfo.o
+OBJECTS := prinfo.o stress.o
 
-all: prinfo
+all: prinfo stress
 
 
 : $(OBJECTS)
@@ -17,5 +17,7 @@ all: prinfo
 clean:
 	rm -f prinfo
 	rm -f prinfo.o
+	rm -f stress
+	rm -f stress.o
 
 .PHONY: clean
