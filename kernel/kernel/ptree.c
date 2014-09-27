@@ -137,7 +137,6 @@ SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 	int k_int, copy_size;
 	struct prinfo *k_buf;
 	struct list_head *task_list;
-	
 	int ret_val = 0;
 
 	if (buf == NULL || nr == NULL) {
@@ -162,7 +161,7 @@ SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 	task_list = &(init_task.children);
 	
 	ret_val = do_dfs(&init_task, k_buf, k_int);
-
+	
 	read_unlock(&tasklist_lock);
 
 	copy_size = ret_val < k_int ? ret_val : k_int;

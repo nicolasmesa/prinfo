@@ -1,0 +1,55 @@
+4a.
+The command and pid fields of a process do not change unless a process
+is specifically killed and restarted at which point, it is likely to be
+assigned a new pid. The parent_pid field of a running process remains
+unchanged. Of course, if the parent process is killed, then child should
+ideally be reassigned to init but we haven't been able to test that. 
+/*likely test would be to kill zygote and monitor what happens*/
+The state field of the prinfo structure will change more frequently
+than the others particularly for a process like sh or even prinfo 
+running in another shell process as it would change from 0 to >0
+upon completion. The child and sibling fields of the prinfo struct will
+change at boot time rapidly as new processes are continuously spawned and
+added, particularly for the zygote process as it is the one that is responsible
+for forking user level processes. 
+
+4b. 
+A total of 61 processes were running before starting the web browser and 62
+after starting it. The process started is labeled android.browser and the
+parent process has a pid of 50 and is called zygote.
+Pressing the home button closes the browser on the UI but doesn't remove the
+process from the process tree as it is still visible in the output of the test
+program. To ensure it closes, the list of processes has to be brought up 
+(2 rectangles button) and then swiped away to close it at which point it
+is no longer available in the process tree. 
+
+4c. 
+i. The zygote process appears to be the one that is responsible for launching
+user level processes and applications such as the browser, calendar etc. Any
+application launched appears as a child of the Zygote process. 
+
+On further reading, it appears that Zygote is analogous to a virtual machine 
+and is based off what is called the Dalvik VM. It maintains a copy of the 
+required libraries to launch and run applications. When booted up, it starts
+ the first Dalvik VM and uses that to launch processes. Now, the major 
+significance is, memory efficiency. Security too would be a good reason 
+but most of the android kernel is read-only so there is no way for applications
+to write in kernel memory. By keeping a single copy of the libraries,
+all the applications can share them as part of the VM. 
+The alternate would be to have each application as a separate process 
+where there would be separate copies of the libraries eatng up memory.[1] 
+
+ii.
+Doing a recursive lookup for zygote doesn't return any executable by the
+name of zygote. The process Zygote is run by init through the executable
+/system/bin/app_process and Zygote is evidently a class that runs on the
+Dalvik VM which is similar to the Java Virtual Machine [2]
+
+iii.
+As mentioned earlier, the major reason the android kernel uses the zygote
+process is to reduce the memory footprint by not requiring to copy the 
+requisite libraries for each process. On a more general note, embedded sytems
+would be optimized to reuse the resource for as many scenarios as possible. It
+makes sense for any embedded system that runs a multi-thread OS over the linux
+kernel to use a process like Zygote to ensure that the kernel doesn't waste
+too many resources by copying address spaces of processes between each other.
