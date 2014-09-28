@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 	}
 
 	int nr = atoi(argv[1]);
-	struct prinfo buf[nr];
+	struct prinfo *buf = malloc(sizeof(struct prinfo) * nr);
 	int ret;
 
 	ret = ptree(buf, &nr);

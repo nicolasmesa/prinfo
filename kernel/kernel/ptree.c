@@ -24,11 +24,11 @@ void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 				struct task_struct, sibling);
 
 
-	if (list_empty(&task->sibling))
-		sibling = NULL;
-	else
 		sibling = list_first_entry(&task->sibling,
 				struct task_struct, sibling);
+
+	if(sibling == list_entry(&(task->parent->children), struct task_struct, sibling))
+		sibling = NULL;
 
 	prinfo_struct->pid = task->pid;
 	prinfo_struct->parent_pid = task->parent->pid;
