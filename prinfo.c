@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define NR 3000
-
 struct prinfo {
 	pid_t parent_pid;               /* process id of parent */
 	pid_t pid;                      /* process id */
@@ -29,8 +27,15 @@ void print_tabs(int count)
 
 void print_tree(struct prinfo *buff, int nr)
 {
-	int i, curr_level = 0, levels[nr];
+	int i, curr_level = 0, *levels;
 	int curr_parent, prev_parent, prev_child;
+
+	levels = malloc(sizeof(int) * nr);
+
+	if (levels == NULL) {
+		printf("Error: %s", strerror(errno));
+		exit(1);
+	}
 
 	levels[0] = buff[0].pid;
 	prev_parent = -1;
@@ -45,14 +50,14 @@ void print_tree(struct prinfo *buff, int nr)
 
 		if (curr_parent == prev_child) {
 			curr_level++;
-			levels[curr_level] = buff[i].pid;
 		} else if (curr_parent != prev_parent) {
-			while (levels[curr_level] != curr_parent)
+			while (curr_level >= 0 && levels[curr_level] != curr_parent)
 				curr_level--;
 
 			curr_level++;
-			levels[curr_level] = buff[i].pid;
 		}
+
+		levels[curr_level] = buff[i].pid;
 
 		prev_child = buff[i].pid;
 		prev_parent = curr_parent;
