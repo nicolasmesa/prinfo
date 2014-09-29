@@ -15,7 +15,7 @@ check*/
 void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 {
 	struct task_struct *child;
-	struct task_struct *sibling;
+	struct task_struct *sibling = NULL;
 	struct list_head *pos;
 	struct task_struct *temp;
 
