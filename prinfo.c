@@ -34,7 +34,7 @@ void print_tree(struct prinfo *buff, int nr)
 
 	if (levels == NULL) {
 		printf("Error: %s", strerror(errno));
-		exit(1);
+		exit(-1);
 	}
 
 	levels[0] = buff[0].pid;
@@ -78,10 +78,16 @@ int main(int argc, char **argv)
 	}
 
 	int nr = atoi(argv[1]);
+
+	if (nr < 1) {
+		printf("Error: The number of processes has to be greater than 0\n");
+		exit(-1);
+	}
+
 	struct prinfo *buf = malloc(sizeof(struct prinfo) * nr);
 
 	if (!buf) {
-		printf("Error: Unable to allocate user memory");
+		printf("Error: %s\n", strerror(errno));
 		exit(-1);
 	}
 

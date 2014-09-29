@@ -1,0 +1,29 @@
+1. The DFS algorithm that was used is a modified version of the algorithm that appears in this web site: 
+
+http://stackoverflow.com/questions/5278580/non-recursive-depth-first-search-algorithm
+Sepecifically:
+
+def dfs(root):
+    node = root
+    while True:
+        visit(node)
+        if node.first_child:
+            node = node.first_child      # walk down
+        else:
+            while not node.next_sibling:
+                if node is root:
+                    return
+                node = node.parent       # walk up ...
+            node = node.next_sibling     # ... and right
+
+
+2. For printing the tree, we use an array named levels and an int name curr_level. The curr_level int holds the quantity of tabs that must be printed at any given time. in the levels array, we store the id of the most recent parrent in curr_level -1. This way, when we reach a process that is not a child of the last process, not is it a sibling, we just iterate through the levels array decrementing curr_level in each iteration and checking the value stored in that position with the parent of the current process. If they match, we have found the parent of the process, and the parent is indented using curr_levels. Because of this, curr_levels is incremented. Each time a child is printed, it is also added to the levels array just in case it has children. If it doesn't, the next sibling will overwrite it.
+
+We allocate the levels array with the number of elements in the buffer. This assures us that, even if each process is the child of the process analized before it, there will be enough levels to handle them in the array.
+
+
+
+3.
+We assume swapper is the parent of init and kthread and that is why those two indented.
+
+
