@@ -4,7 +4,9 @@ is specifically killed and restarted at which point, it is likely to be
 assigned a new pid. The parent_pid field of a running process remains
 unchanged. Of course, if the parent process is killed, then child should
 ideally be reassigned to init but we haven't been able to test that. 
-/*likely test would be to kill zygote and monitor what happens*/
+However, when zygote is killed, the processes are not assigned to
+init because the user processes cannot run without zygote and the
+emulator restarts.
 The state field of the prinfo structure will change more frequently
 than the others particularly for a process like sh or even prinfo 
 running in another shell process as it would change from 0 to >0
@@ -53,3 +55,7 @@ would be optimized to reuse the resource for as many scenarios as possible. It
 makes sense for any embedded system that runs a multi-thread OS over the linux
 kernel to use a process like Zygote to ensure that the kernel doesn't waste
 too many resources by copying address spaces of processes between each other.
+
+Sources:
+[1] - http://anatomyofandroid.com/2013/10/15/zygote/
+[2] - http://coltf.blogspot.com/p/android-os-processes-and-zygote.html
