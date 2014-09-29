@@ -74,11 +74,11 @@ int main(int argc, char **argv)
 
 	int nr = atoi(argv[1]);
 	struct prinfo *buf = malloc(sizeof(struct prinfo) * nr);
-	
-	if(!buf) {
+
+	if (!buf) {
 		printf("Error: Unable to allocate user memory");
 		exit(-1);
-	}	
+	}
 
 	int ret;
 
