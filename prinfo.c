@@ -68,6 +68,8 @@ void print_tree(struct prinfo *buff, int nr)
 			buff[i].first_child_pid,
 			buff[i].next_sibling_pid, buff[i].uid);
 	}
+
+	free(levels);
 }
 
 int main(int argc, char **argv)
@@ -99,6 +101,8 @@ int main(int argc, char **argv)
 	ret = ret < nr ? ret : nr;
 
 	print_tree(buf, ret);
+
+	free(buf);
 
 	return 0;
 }
