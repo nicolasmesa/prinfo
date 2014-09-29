@@ -27,8 +27,10 @@ void add_prinfo(struct prinfo *prinfo_struct, struct task_struct *task)
 		sibling = list_first_entry(&task->sibling,
 				struct task_struct, sibling);
 
-	if(sibling == list_entry(&(task->parent->children), struct task_struct, sibling))
+	if(sibling == list_entry(&(task->parent->children), struct task_struct, sibling)){
+		printk(KERN_DEBUG "Equal\n");
 		sibling = NULL;
+	}
 
 	prinfo_struct->pid = task->pid;
 	prinfo_struct->parent_pid = task->parent->pid;
@@ -155,6 +157,9 @@ SYSCALL_DEFINE2(ptree, struct prinfo __user *, buf, int __user *, nr)
 	}
 
 	k_buf = kmalloc_array(k_int, sizeof(*k_buf), GFP_KERNEL);
+
+	if (k_buf == NULL)
+		return -ENOMEM;
 
 	read_lock(&tasklist_lock);
 
