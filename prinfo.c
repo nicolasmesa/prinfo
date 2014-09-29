@@ -51,7 +51,8 @@ void print_tree(struct prinfo *buff, int nr)
 		if (curr_parent == prev_child) {
 			curr_level++;
 		} else if (curr_parent != prev_parent) {
-			while (curr_level >= 0 && levels[curr_level] != curr_parent)
+			while (curr_level >= 0 && levels[curr_level]
+							!= curr_parent)
 				curr_level--;
 
 			curr_level++;
