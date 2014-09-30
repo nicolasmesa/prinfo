@@ -21,7 +21,9 @@ after starting it. The process started is labeled android.browser and the
 parent process has a pid of 50 and is called zygote.
 Pressing the home button closes the browser on the UI but doesn't remove the
 process from the process tree as it is still visible in the output of the test
-program. To ensure it closes, the list of processes has to be brought up 
+program. 
+Moreover its status shows that it is still running i.e. remains 0
+To ensure it closes, the list of processes has to be brought up 
 (2 rectangles button) and then swiped away to close it at which point it
 is no longer available in the process tree. 
 
