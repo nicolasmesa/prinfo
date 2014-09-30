@@ -1,3 +1,9 @@
+make builds the binary as well as the stress testing program.
+The library function ptree() is defined in the test program prinfo.c as a user space library function
+
+Run executable using ./prinfo <num of processes> --r/--x
+For example, use ./prinfo 100 --r to get a list of upto 100 processes and display the total number of processes if more than hundred. Use --x to suppress the final display value
+
 1. The DFS algorithm that was used is a modified version of the algorithm that appears in this web site: 
 
 http://stackoverflow.com/questions/5278580/non-recursive-depth-first-search-algorithm

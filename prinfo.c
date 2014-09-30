@@ -3,7 +3,7 @@
 #include <sys/syscall.h>
 #include <stdlib.h>
 #include <errno.h>
-
+#include <string.h>
 struct prinfo {
 	pid_t parent_pid;               /* process id of parent */
 	pid_t pid;                      /* process id */
@@ -75,10 +75,26 @@ void print_tree(struct prinfo *buff, int nr)
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) {
-		printf("Usage: ./prinfo <num of processes requested>\n");
+	
+	int print_flag = 0;
+	
+	if (argc != 3) {
+		printf("Usage: ./prinfo <num of processes requested> --r/--x\n");
 		return 0;
 	}
+	if (strcmp(argv[2],"--r") == 0) 
+		print_flag = 1;
+	
+	else if (strcmp(argv[2], "--x") == 0) 
+		print_flag = 0;
+	else {
+
+		printf("Usage: ./prinfo <num of processes requested> --r/--x\n");
+		return 0;
+	}
+	
+
+	
 
 	int nr = atoi(argv[1]);
 
@@ -96,12 +112,14 @@ int main(int argc, char **argv)
 
 	int ret;
 
+	
 	ret = ptree(buf, &nr);
-	printf("Returned: %d\n", ret);
-
+	
 	ret = ret < nr ? ret : nr;
-
 	print_tree(buf, ret);
+	
+	if(print_flag == 1)
+		printf("\nNum of processes returned is %d\n", ret);
 
 	free(buf);
 
