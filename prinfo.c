@@ -34,7 +34,7 @@ void print_tree(struct prinfo *buff, int nr)
 
 	if (levels == NULL) {
 		printf("Error: %s", strerror(errno));
-		exit(1);
+		exit(-1);
 	}
 
 	levels[0] = buff[0].pid;
@@ -51,7 +51,8 @@ void print_tree(struct prinfo *buff, int nr)
 		if (curr_parent == prev_child) {
 			curr_level++;
 		} else if (curr_parent != prev_parent) {
-			while (curr_level >= 0 && levels[curr_level] != curr_parent)
+			while (curr_level >= 0 && levels[curr_level]
+							!= curr_parent)
 				curr_level--;
 
 			curr_level++;
@@ -68,6 +69,8 @@ void print_tree(struct prinfo *buff, int nr)
 			buff[i].first_child_pid,
 			buff[i].next_sibling_pid, buff[i].uid);
 	}
+
+	free(levels);
 }
 
 int main(int argc, char **argv)
@@ -78,10 +81,16 @@ int main(int argc, char **argv)
 	}
 
 	int nr = atoi(argv[1]);
+
+	if (nr < 1) {
+		printf("Error: The number of processes has to be greater than 0\n");
+		exit(-1);
+	}
+
 	struct prinfo *buf = malloc(sizeof(struct prinfo) * nr);
 
 	if (!buf) {
-		printf("Error: Unable to allocate user memory");
+		printf("Error: %s\n", strerror(errno));
 		exit(-1);
 	}
 
@@ -93,6 +102,8 @@ int main(int argc, char **argv)
 	ret = ret < nr ? ret : nr;
 
 	print_tree(buf, ret);
+
+	free(buf);
 
 	return 0;
 }
